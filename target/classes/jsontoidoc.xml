@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c2d0aa96-6242-481d-a839-b0f2b8252afc" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="jsonToIdocFlow" doc:id="dc1c3ccb-0c4f-4341-b2ac-5ba076b6a74d" >
+		<http:listener doc:name="Listener" doc:id="8442e02b-69ab-4e06-b72c-e6495746a869" config-ref="HTTP_Listener_config" path="/jsonToIdoc"/>
+		<ee:transform doc:name="Transform Message" doc:id="2761b457-9fe3-495a-9043-696cb0a86ad3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"salesOrderType": "AT",
+	"salesChannel": {
+		"division": "10",
+		"distributionChannel": "10",
+		"salesOrg": "8000",
+		"salesGroup": "XXX",
+		"salesOffice": "3"
+	},
+	"purchaseOrderDate": "2020-10-05",
+	"externalTradingPartnerId": "123456ANX",
+
+
+
+	"sapTradingPartnerId": "23434ABC",
+	"grandTotalAmount": 0,
+	"soldToContact": "ABC Group",
+	"customerMessages": [
+		" ", " ", " "
+	],
+	"shipToAddress": [{
+		"name": "HDJHJFSJHBHJGSH",
+		"streetAddress1": "CURRAN PLACE",
+		"streetAddress2": " ",
+		"city": "Atlanta",
+		"state": "GA",
+		"postalCode": "54321",
+		"country": "US"
+	}],
+	"requestorEmailAddress": "customer@abc.com",
+	"soldToCustomer": "ABC",
+	"requestorEmailBody": "customer@abc.com",
+	"contentStore": [{
+		"filePath": "abc",
+		"filePathTwo": "iyt"
+	}],
+	"systemControlRecord": {
+		"receiverPort": "243",
+		"receiverPartner": "837",
+		"receiverAddress": "123 ABC",
+		"ediMessageCode": "hi thr!",
+		"senderPort": "987",
+		"senderPartner": "yxcss"
+	},
+	"customerEdiMappingField": [
+		"tere", "uyetr"
+	],
+	"currency": "USD",
+	"billToAddress": [{
+		"name": "abc corp",
+		"streetAddress1": "1234",
+		"streetAddress2": "Atlanta Rd",
+		"city": "Atlanta",
+		"state": "GA",
+		"postalCode": "100000",
+		"country": "US"
+	}],
+	"UniqueIdentifier": [
+		"73645", "9875"
+	],
+	"purchaseOrderNumber": "1234",
+	"confirmationRecipientEmailText": "email text",
+	"orderLineItems": [{
+		"quantity": 0,
+		"unitOfMeasure": "ounces",
+		"priceUnitOfMeasure": "12/ounce",
+		"unitPrice": 10,
+		"priceUnit": 20,
+		"customerPoLineNumber": "tytrer",
+		"dateRequired": "2016-07-21",
+		"customerMaterialNumber": "ooiutev",
+		"partNumber": "98632",
+		"materialDescription": "abc items",
+		"comments": [
+			"urgent order", "dispatch soon"
+		]
+	}]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="9f8d37fe-f70f-48b1-ae2b-f2a679fc264e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+import * from dw::core::Strings
+var order = payload
+/*fun splitMessage(stringMsg,maxLength,elementName) = flatten(stringMsg scan(".{1," ++ maxLength ++ "}" as Regex)) map {
+    "$(elementName)" @(SEGMENT: 1):{
+        "TDLINE" : $,
+        "TDFORMAT": "/"
+        }
+}*/
+---
+{
+"ORDERS05": {
+"IDOC":{
+    "EDI_DC40" @(SEGMENT: 1): {
+        "MESCOD": order.systemControlRecord.receiverPort,
+         "SNDPRN": order.systemControlRecord.senderPartner,
+         "RCVPOR": order.systemControlRecord.receiverPort,
+        "RCVPRN": order.systemControlRecord.receiverPartner,
+         "SNDPOR": order.systemControlRecord.senderPort,
+        "RCVSAD": order.systemControlRecord.receiverAddress,
+    },
+    "E1EDK01" @(SEGMENT: 1): {
+        "BSART": order.salesOrderType,
+        "CURCY": order.currency
+    },
+    "E1EDK14" @(SEGMENT: 1):{
+        "QUALF" : "006",
+        "ORGID": order.salesChannel.division
+    },
+     "E1EDK14" @(SEGMENT: 1):{
+        "QUALF" : "007",
+        "ORGID": order.salesChannel.distributionChannel
+    },
+     "E1EDK14" @(SEGMENT: 1):{
+        "QUALF" : "008",
+        "ORGID": order.salesChannel.salesOrg
+    },
+     "E1EDK14" @(SEGMENT: 1):{
+        "QUALF" : "010",
+        "ORGID": order.salesChannel.salesGroup
+    },
+     "E1EDK14" @(SEGMENT: 1):{
+        "QUALF" : "012",
+        "ORGID": order.salesOrderType
+    },
+     "E1EDK14" @(SEGMENT: 1):{
+        "QUALF" : "016",
+        "ORGID": order.salesChannel.salesOffice
+    },
+    "E1EDK03" @(SEGMENT: 1):{
+        "IDDAT" : "022",
+        "DATUM": order.purchaseOrderDate as Date as String {format: "YYYYMMdd"}
+    },
+    "E1EDKA1" @(SEGMENT: 1):{
+        "PARVW" : "AG",
+        "LIFNR": order.externalTradingPartnerId,
+        "BNAME": order.soldToContact
+    },
+     "E1EDKA1" @(SEGMENT: 1):{
+        "PARVW" : "WE",
+        "NAME1": order.shipToAddress[0].name,
+        "STRAS": order.shipToAddress[0].streetAddress1,
+        "STRAS2": order.shipToAddress[0].streetAddress2,
+        "ORT01" : order.shipToAddress[0].city,
+        "PSTLZ": order.shipToAddress[0].postalCode,
+        "LAND1": order.shipToAddress[0].country,
+        "TELBX": order.externalTradingPartnerId,
+        "REGIO" : order.shipToAddress[0].state,
+         "IHREZ": order.customerEdiMappingField[0],
+    },
+     "E1EDK02" @(SEGMENT: 1):{
+        "QUALF" : "001",
+        "BELNR": order.purchaseOrderNumber,
+        "DATUM": order.purchaseOrderDate as Date as String {format: "YYYYMMdd"}
+    },
+    "E1EDKT1" @(SEGMENT: 1):{
+        "TDID" : "ZKET",
+        "TSSPRAS": "EN",
+        "TSSPRAS_ISO": "EN",
+        "E1EDKT2" @(SEGMENT: 1):{
+        "TDLINE" : order.contentStore[0].filePath,
+        "TDFORMAT": "/"
+        },
+         "E1EDKT2" @(SEGMENT: 1):{
+        "TDLINE" : order.contentStore[0].filePathTwo,
+        "TDFORMAT": "/"
+        },
+         "E1EDKT2" @(SEGMENT: 1):{
+        "TDLINE" : order.iqbotUniqueIdentifier,
+        "TDFORMAT": "/"
+        },
+         "E1EDKT2" @(SEGMENT: 1):{
+       // "TDLINE" : order.iqbotDateReceived[0] as Date as String {format: "YYYYMMdd"},
+       // "TDFORMAT": "/"
+        },
+        // (splitMessage(order.customerMessages[0],4,"E1EDKT2")),
+       },
+     "E1EDKT1" @(SEGMENT: 1):{
+        "TDID" : "ZK17",
+        "TSSPRAS": "EN",
+        "TSSPRAS_ISO": "EN",
+         //(splitMessage(order.purchaseOrderNumber,70,"E1EDKT2")),
+       },
+    (order.orderLineItems map {
+        "E1EDP01" @(SEGMENT: 1):{
+        "POSEX": leftPad($.customerPoLineNumber,6,"0"),
+        "MENGE" : $.quantity,
+        "MENEE": $.unitOfMeasure,
+        "PMENE": $.priceUnitOfMeasure,
+        "VPREI": $.unitPrice,
+        "PEINH": $.priceUnit,
+        "E1EDP02" @(SEGMENT: 1): {
+            "ZEILE": leftPad($.customerPoLineNumber,3,"0"),
+        },
+        "E1EDP03" @(SEGMENT: 1): {
+            "IDDAT": $.dateRequired as Date as String {format: "YYYYMMdd"}
+        },
+        "E1EDP19" @(SEGMENT: 1): {
+            "QUALF" : "001",
+            "IDTNR" : $.customerMaterialNumber
+        },
+        "E1EDP19" @(SEGMENT: 1): {
+            "QUALF" : "002",
+            "IDTNR" : $.partNumber
+        },
+         "E1EDPT1" @(SEGMENT: 1): {
+            "TDID" : "ZP07",
+            "TSSPRAS" : "EN",
+            "TSSPRAS_ISO" : "EN",
+            //(splitMessage($.materialDescription,70,"E1EDPT2")),
+        }
+    }
+    })
+}
+}
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
